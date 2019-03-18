@@ -25,68 +25,62 @@ namespace ga {
         bool boolean();
     }
 
+    template <typename t>
+    struct chromo_config {
+        Cod cod_type;
+        int chromo_size;
+        pair<t,t> bounds;
+
+        chromo_config(){}
+        chromo_config(Cod cod, int s, t i, t f){
+            this->cod_type = cod;
+            this->chromo_size = s;
+            this->bounds.first = i;
+            this->bounds.second = f;
+        }
+    };
+
     
     template <typename t>
     class Agent {
-        Cod cod_type;
         t * chromo_buff;
-        int chromo_size;
-        pair<t, t> bounds;
+        chromo_config<t> feature;
 
     public:
         Agent<t>() {}
-        Agent<t>(int size, Cod type, t b1, t b2) {
-            this->chromo_size = size;
-            this->cod_type = type;
-            this->chromo_buff = new t[this->chromo_size];
-            this->bounds = pair<t,t>(b1, b2);
+        Agent<t>(chromo_config<t> feature) {
+            this->feature = feature;
+            this->chromo_buff = new t[this->feature.chromo_size];
             generate();
         }
 
-        Agent<t>(int size, Cod type) {
-            if(type == BIN || type == INT_PERM) {
-                this->chromo_size = size;
-                this->cod_type = type;
-                this->chromo_buff = new t[this->chromo_size];
-                this->bounds = pair<t,t>(0,0);
-                generate();
-            }
-        }
-
         int generate() {
-            switch(cod_type) {
-                case BIN:
-                    for(int i = 0; i < this->chromo_size; i++) {
+            vector<int> tmp(this->feature.chromo_size); 
+            for(int i = 0; i < tmp.size(); i++) 
+                tmp[i] = i;
+            int max = this->feature.chromo_size -1;
+
+            for(int i = 0; i < this->feature.chromo_size; i++) {
+                switch(feature.cod_type) {
+                    case BIN:
                         this->chromo_buff[i] = rand::boolean();
-                    }
+                        break;
 
-                    break;
+                    case INT:
+                        this->chromo_buff[i] = rand::integer(this->feature.bounds.first, this->feature.bounds.second);
+                        break;
 
-                case INT:
-                    for(int i = 0; i < this->chromo_size; i++) {
-                        this->chromo_buff[i] = rand::integer(this->bounds.first, this->bounds.second);
-                    }
-                    break;
+                    case REAL:
+                        this->chromo_buff[i] = rand::real(this->feature.bounds.first, this->feature.bounds.second);
+                        break;
 
-                case REAL:
-                    for(int i = 0; i < this->chromo_size; i++) {
-                        this->chromo_buff[i] = rand::real(this->bounds.first, this->bounds.second);
-                    }
-                    break;
-
-                case INT_PERM:
-                    vector<int> tmp(this->chromo_size);   
-                    for(int i = 0; i < tmp.size(); i++) 
-                        tmp[i] = i;
-
-                    int max = this->chromo_size -1;
-                    for(int i = 0; i < this->chromo_size; i++) {
+                    case INT_PERM:
                         int offset = rand::integer(0, max);
                         this->chromo_buff[i] = tmp[offset];
                         tmp.erase(tmp.begin() + offset);
                         --max;
-                    }
-                    break;
+                        break;
+                }
             }
 
             print();
@@ -95,39 +89,33 @@ namespace ga {
 
 
         void print() {
-            cout << "Agent : {" << endl;
-            cout << "   type: " << this->cod_type << endl;
-            cout << "   chromo_size: " << this->chromo_size << endl;
-            cout << "   bounds: (" << this->bounds.first << ", " << this->bounds.second << ")" << endl;
-            cout << "   chromo_buff: [";
-            for(int i = 0; i < this->chromo_size; i++) {
+            cout << "[";
+            for(int i = 0; i < this->feature.chromo_size; i++) {
                 cout << this->chromo_buff[i];
-                if(i != this->chromo_size - 1)
+                if(i != this->feature.chromo_size - 1)
                     cout << ",";
             }
-            cout << "]" << endl << "}" << endl;
+            cout << "]" << endl;
         }
     };
 
-    template <class t>
+    template <typename t>
     class Population {
-        Cod cod_type;
         int pop_size;
-        int chromo_size;
+        chromo_config<t> chromo_style;
         Agent<t> * agent_buff;
     public:
         Population();
-        Population(Cod cod_type, int pop_size, int chromo_size, t in, t fi) {
-            this->cod_type = cod_type;
+        Population(int pop_size, chromo_config<t> chromo_style) {
+            this->chromo_style = chromo_style;
             this->pop_size = pop_size;
-            this->chromo_size = chromo_size;
             agent_buff = new Agent<t>[this->pop_size];
 
             for(int i = 0; i < this->pop_size; i++) {
-                if((cod_type == BIN || cod_type == INT_PERM) && in==fi)
-                    agent_buff[i] = Agent<t>(chromo_size, cod_type);
+                if(chromo_style.cod_type == BIN || chromo_style.cod_type == INT_PERM)
+                    agent_buff[i] = Agent<t>(chromo_style);
                 else {
-                    agent_buff[i] = Agent<t>(chromo_size, cod_type, in, fi);
+                    agent_buff[i] = Agent<t>(chromo_style);
                 }
             }
         }
