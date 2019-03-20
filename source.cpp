@@ -22,25 +22,25 @@ namespace ga {
             return integer(0, 1);
         }
 
-        int * vec_int(int size, int in, int fi) {
-            int * ret = new int[size];
+        vector<int> vec_int(int size, int in, int fi) {
+            vector<int> ret(size);
             for(int i = 0; i < size; i++)
                 ret[i] = integer(in, fi);
             
             return ret;
         }
+        
+        // double * vec_real(int size, double in, double fi) {
+        //     double * ret = new double[size];
+        //     for(int i = 0; i < size; i++)
+        //         ret[i] = real(in, fi);
 
-        double * vec_real(int size, double in, double fi) {
-            double * ret = new double[size];
-            for(int i = 0; i < size; i++)
-                ret[i] = real(in, fi);
+        //     return ret;
+        // }
 
-            return ret;
-        }
-
-        int * vec_intperm(int size) {
+        vector<int> vec_intperm(int size) {
             vector<int> tmp(size); 
-            int * ret = new int[size];
+            vector<int> ret(size);
             for(int i = 0; i < tmp.size(); i++) 
                 tmp[i] = i;
             int max = size -1;
