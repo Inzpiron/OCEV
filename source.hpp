@@ -23,20 +23,22 @@ namespace ga {
         int integer(int i, int j);
         double real(double i, double j);
         bool boolean();
+        int * vec_int(int, int, int);
+        double * vec_real(int, double, double);
+        int * vec_intperm(int);
     }
 
     template <typename t>
     struct chromo_config {
         Cod cod_type;
         int chromo_size;
-        pair<t,t> bounds;
+        std::function<t*()> chromo_gen;
 
         chromo_config(){}
-        chromo_config(Cod cod, int s, t i, t f){
+        chromo_config(Cod cod, int s, auto func){
             this->cod_type = cod;
             this->chromo_size = s;
-            this->bounds.first = i;
-            this->bounds.second = f;
+            this->chromo_gen = func;
         }
     };
 
@@ -50,43 +52,9 @@ namespace ga {
         Agent<t>() {}
         Agent<t>(chromo_config<t> feature) {
             this->feature = feature;
-            this->chromo_buff = new t[this->feature.chromo_size];
-            generate();
-        }
-
-        int generate() {
-            vector<int> tmp(this->feature.chromo_size); 
-            for(int i = 0; i < tmp.size(); i++) 
-                tmp[i] = i;
-            int max = this->feature.chromo_size -1;
-
-            for(int i = 0; i < this->feature.chromo_size; i++) {
-                switch(feature.cod_type) {
-                    case BIN:
-                        this->chromo_buff[i] = rand::boolean();
-                        break;
-
-                    case INT:
-                        this->chromo_buff[i] = rand::integer(this->feature.bounds.first, this->feature.bounds.second);
-                        break;
-
-                    case REAL:
-                        this->chromo_buff[i] = rand::real(this->feature.bounds.first, this->feature.bounds.second);
-                        break;
-
-                    case INT_PERM:
-                        int offset = rand::integer(0, max);
-                        this->chromo_buff[i] = tmp[offset];
-                        tmp.erase(tmp.begin() + offset);
-                        --max;
-                        break;
-                }
-            }
-
+            this->chromo_buff = this->feature.chromo_gen();
             print();
-            rand::reset();
         }
-
 
         void print() {
             cout << "[";
@@ -102,12 +70,14 @@ namespace ga {
     template <typename t>
     class Population {
         int pop_size;
+        pair<t, t> bounds;
         chromo_config<t> chromo_style;
         Agent<t> * agent_buff;
     public:
         Population();
-        Population(int pop_size, chromo_config<t> chromo_style) {
+        Population(int pop_size, pair<t,t> bounds, chromo_config<t> chromo_style) {
             this->chromo_style = chromo_style;
+            this->bounds = bounds;
             this->pop_size = pop_size;
             agent_buff = new Agent<t>[this->pop_size];
 
