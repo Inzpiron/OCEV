@@ -6,33 +6,36 @@ using namespace std;
 int main() {
     ga::rand::reset();
 
-    
-    cout << "População BIN" << endl;
-    ga::Population<int> pop(10, {0,1}, ga::chromo_config<int>(ga::BIN, []()->vector<int>{
-        return ga::rand::vec_int(10, 0, 1);
-    }));
-    cout << endl << endl;
 
+    auto fitness = [](ga::Agent<auto>& agent) {
+        map<pair<int, int>, bool> mapa;
+        int sum = 0;
+        int total = 0;
+        for(int i = 0; i < agent.chromo_buff.size(); i++) {
+            int y = i;
+            int x = agent.chromo_buff[i];
+
+            for(int j = i+1; j < agent.chromo_buff.size(); j++) {
+                ++total;
+                int _y = j;
+                int _x = agent.chromo_buff[j];
+
+                if(_y == y || x == _x || abs(x - _x) == abs(y - _y)){
+                    sum++;
+                }
+            }
+        }
+
+        return 1.0 - ((double) sum/ (double)total);
+    };
 
     cout << "População INT_PERM" << endl;
     ga::Population<int> pop1(10, ga::chromo_config<int>(ga::INT_PERM, []()->vector<int>{
-         return ga::rand::vec_intperm(10);
-    }));
-    // cout << endl << endl;
+        return ga::rand::vec_intperm(10000);
+    }), fitness);
 
-
-    // cout << "População INT" << endl;
-    // ga::Population<int> pop2({0, 10}, ga::chromo_config<int>(ga::INT_PERM, 10, []()->int*{
-    //     return ga::rand::vec_int(10, 0, 10);
-    // }));
-    // cout << endl << endl;
-
-
-    // cout << "População REAL" << endl;
-    // ga::Population<double> pop3({0.0, 10.0}, ga::chromo_config<double>(ga::REAL, 10, []()->double*{
-    //     return ga::rand::vec_real(10, 0, 10);
-    // }));
-    // cout << endl << endl;
+    pop1.run_fitness();
+    cout << endl << endl;
 
     /*
     cout << "População INT-PERM" << endl;
@@ -43,5 +46,6 @@ int main() {
     ga::Population<double> pop2(10, ga::chromo_config<double>(ga::REAL, 10, -5, 10));
     cout << endl << endl;
     */
+
     return 0;
 }
