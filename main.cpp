@@ -6,7 +6,6 @@ using namespace std;
 int main() {
     ga::rand::reset();
 
-
     auto fitness = [](ga::Agent<auto>& agent) {
         map<pair<int, int>, bool> mapa;
         int sum = 0;
@@ -30,22 +29,12 @@ int main() {
     };
 
     cout << "População INT_PERM" << endl;
-    ga::Population<int> pop1(10, ga::chromo_config<int>(ga::INT_PERM, []()->vector<int>{
+    ga::Population<int> pop1(100, ga::chromo_config<int>(ga::INT_PERM, []()->vector<int>{
         return ga::rand::vec_intperm(10000);
     }), fitness);
 
     pop1.run_fitness();
     cout << endl << endl;
-
-    /*
-    cout << "População INT-PERM" << endl;
-    ga::Population<int> pop1(10, ga::chromo_config<int>(ga::INT_PERM, 10, 0, 0));
-    cout << endl << endl;
-
-    cout << "População REAL" << endl;
-    ga::Population<double> pop2(10, ga::chromo_config<double>(ga::REAL, 10, -5, 10));
-    cout << endl << endl;
-    */
 
     return 0;
 }
