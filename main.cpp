@@ -29,8 +29,8 @@ int main() {
     };
 
     cout << "População INT_PERM" << endl;
-    ga::Population<int> pop1(100, ga::chromo_config<int>(ga::INT_PERM, []()->vector<int>{
-        return ga::rand::vec_intperm(10000);
+    ga::Population<int> pop1(10, ga::chromo_config<int>(ga::INT_PERM, []()->vector<int>{
+        return ga::rand::vec_intperm(16);
     }), fitness);
 
     pop1.run_fitness();
