@@ -5,7 +5,7 @@ using namespace std;
 
 namespace ga {
     enum Cod {
-        BIN, 
+        BIN,
         INT,
         INT_PERM,
         REAL
@@ -40,7 +40,7 @@ namespace ga {
         }
     };
 
-    
+
     template <typename t>
     class Agent {
         chromo_config<t> feature;
@@ -74,14 +74,17 @@ namespace ga {
         chromo_config<t> chromo_style;
         Agent<t> * agent_buff;
         std::function<double(Agent<t>&)> func_fitness;
+        std::function<void(Population&)> func_selection;
 
     public:
         Population();
-        Population(int pop_size, pair<t,t> bounds, chromo_config<t> chromo_style, auto func_fitness) {
+        Population(int pop_size, pair<t,t> bounds, chromo_config<t> chromo_style, auto func_fitness,
+                   auto func_selection) {
             this->chromo_style = chromo_style;
             this->bounds = bounds;
             this->pop_size = pop_size;
             this->func_fitness = func_fitness;
+            this->func_selection = func_selection;
             agent_buff = new Agent<t>[this->pop_size];
 
             for(int i = 0; i < this->pop_size; i++) {
@@ -89,11 +92,12 @@ namespace ga {
             }
         }
 
-        Population(int pop_size, chromo_config<t> chromo_style, auto func_fitness) {
+        Population(int pop_size, chromo_config<t> chromo_style, auto func_fitness, auto func_roulette) {
             this->chromo_style = chromo_style;
             this->bounds = {0,0};
             this->pop_size = pop_size;
             this->func_fitness = func_fitness;
+            this->func_selection = func_roulette;
             agent_buff = new Agent<t>[this->pop_size];
 
             //#pragma omp parallel for
@@ -102,13 +106,50 @@ namespace ga {
             }
         }
 
-
         void run_fitness() {
             #pragma omp parallel for
             for(int i = 0; i < pop_size; i++) {
-                agent_buff[i].print();
                 agent_buff[i].fitness = func_fitness(agent_buff[i]);
-                cout << agent_buff[i].fitness << endl;
+                //cout << agent_buff[i].fitness << endl;
+            }
+        }
+
+        void run_selection() {
+            this->func_selection(*this);
+        }
+
+        static void roulette(Population<t>& pop) {
+            double fit_rel[pop.pop_size] = {0};
+            double fit_total = 0;
+            for(int i = 0; i <  pop.pop_size; i++) {
+                fit_total += pop.agent_buff[i].fitness;
+            }
+
+            cout << "roleta: " << endl;
+            double roleta[pop.pop_size + 1] = {0};
+            double fit_rel_sum = 0;
+            for(int i = 0; i < pop.pop_size; i++) {
+                fit_rel[i] = pop.agent_buff[i].fitness/fit_total;
+                fit_rel_sum += fit_rel[i];
+                roleta[i+1] = fit_rel_sum;
+            }
+
+
+            for(int i = 0; i < pop.pop_size + 1; i++) {
+                cout << roleta[i] << endl;
+            }
+
+            cout << endl;
+            vector<Agent<t>> chosen_by_god;
+            while(chosen_by_god.size() < 10) {
+                double target = rand::real(0,1);
+                for(int i = 0; i < pop.pop_size; i++) {
+                    if(roleta[i] <= target && roleta[i+1] > target) {
+                        chosen_by_god.push_back(pop.agent_buff[i]);
+                        cout << i << " " << pop.agent_buff[i].fitness << endl;
+                        break;
+                    }
+                }
             }
         }
     };

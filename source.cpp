@@ -26,10 +26,10 @@ namespace ga {
             vector<int> ret(size);
             for(int i = 0; i < size; i++)
                 ret[i] = integer(in, fi);
-            
+
             return ret;
         }
-        
+
         // double * vec_real(int size, double in, double fi) {
         //     double * ret = new double[size];
         //     for(int i = 0; i < size; i++)
@@ -39,9 +39,9 @@ namespace ga {
         // }
 
         vector<int> vec_intperm(int size) {
-            vector<int> tmp(size); 
+            vector<int> tmp(size);
             vector<int> ret(size);
-            for(int i = 0; i < tmp.size(); i++) 
+            for(int i = 0; i < tmp.size(); i++)
                 tmp[i] = i;
             int max = size -1;
 
@@ -56,7 +56,3 @@ namespace ga {
         }
     }
 }
-
-
-
-

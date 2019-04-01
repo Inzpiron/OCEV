@@ -24,17 +24,15 @@ int main() {
                 }
             }
         }
-
-        return 1.0 - ((double) sum/ (double)total);
+        return 1.0 - ((double)sum/(double)total);
     };
 
-    cout << "População INT_PERM" << endl;
     ga::Population<int> pop1(10, ga::chromo_config<int>(ga::INT_PERM, []()->vector<int>{
         return ga::rand::vec_intperm(16);
-    }), fitness);
+    }), fitness, ga::Population<int>::roulette);
 
     pop1.run_fitness();
-    cout << endl << endl;
+    pop1.run_selection();
 
     return 0;
 }
