@@ -69,14 +69,14 @@ namespace ga {
 
     template <typename t>
     class Population {
+    public:
         int pop_size;
         pair<t, t> bounds;
         chromo_config<t> chromo_style;
         Agent<t> * agent_buff;
         std::function<double(Agent<t>&)> func_fitness;
         std::function<void(Population&)> func_selection;
-
-    public:
+        
         Population();
         Population(int pop_size, pair<t,t> bounds, chromo_config<t> chromo_style, auto func_fitness,
                    auto func_selection) {
@@ -117,13 +117,17 @@ namespace ga {
         void run_selection() {
             this->func_selection(*this);
         }
+    };
 
-        static void roulette(Population<t>& pop) {
+    namespace selection {
+        template<typename t>
+        void roulette(Population<t>& pop) {
+            double last = -1;
             double fit_rel[pop.pop_size] = {0};
             double fit_total = 0;
-            for(int i = 0; i <  pop.pop_size; i++) {
+
+            for(int i = 0; i <  pop.pop_size; i++) 
                 fit_total += pop.agent_buff[i].fitness;
-            }
 
             cout << "roleta: " << endl;
             double roleta[pop.pop_size + 1] = {0};
@@ -140,7 +144,7 @@ namespace ga {
             }
 
             cout << endl;
-            vector<Agent<t>> chosen_by_god;
+            vector< Agent<t> > chosen_by_god;
             while(chosen_by_god.size() < 10) {
                 double target = rand::real(0,1);
                 for(int i = 0; i < pop.pop_size; i++) {
@@ -152,7 +156,7 @@ namespace ga {
                 }
             }
         }
-    };
+    }
 }
 
 #endif

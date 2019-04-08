@@ -27,9 +27,19 @@ int main() {
         return 1.0 - ((double)sum/(double)total);
     };
 
-    ga::Population<int> pop1(10, ga::chromo_config<int>(ga::INT_PERM, []()->vector<int>{
-        return ga::rand::vec_intperm(16);
-    }), fitness, ga::Population<int>::roulette);
+    ga::chromo_config<int> chromo(              // Estrutura que define o agente
+        ga::INT_PERM,                           // Tipo de codificação: BIN, INT-PERM, REAL, INT
+        []()->vector<int>{                      // Função para gerar os individuos iniciais
+            return ga::rand::vec_intperm(16);
+        }
+    );
+
+    ga::Population<int> pop1(           // Classe população
+        10,                             // Quantidade de individuos
+        chromo,                         // Estilo do cromossomo
+        fitness,                        // Função fitness associada
+        ga::selection::roulette<int>    // Método de seleção
+    );
 
     pop1.run_fitness();
     pop1.run_selection();
