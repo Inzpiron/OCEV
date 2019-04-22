@@ -34,15 +34,17 @@ int main() {
         }
     );
 
-    ga::Population<int> pop1(           // Classe população
-        10,                             // Quantidade de individuos
-        chromo,                         // Estilo do cromossomo
-        fitness,                        // Função fitness associada
-        ga::selection::roulette<int>    // Método de seleção
+    ga::Population<int> pop1(            // Classe população
+        10,                              // Quantidade de individuos
+        chromo,                          // Estilo do cromossomo
+        fitness,                         // Função fitness associada
+        ga::selection::roulette<int>,    // Método de seleção
+        ga::crossover::bin::points<int>
     );
 
     pop1.run_fitness();
     pop1.run_selection();
+    pop1.run_crossover(10, 0.80);
 
     return 0;
 }

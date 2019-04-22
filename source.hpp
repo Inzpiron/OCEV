@@ -74,12 +74,14 @@ namespace ga {
         pair<t, t> bounds;
         chromo_config<t> chromo_style;
         Agent<t> * agent_buff;
+
         std::function<double(Agent<t>&)> func_fitness;
         std::function<void(Population&)> func_selection;
+        std::function<void(Population&, int, double)> func_crossover;
         
         Population();
         Population(int pop_size, pair<t,t> bounds, chromo_config<t> chromo_style, auto func_fitness,
-                   auto func_selection) {
+                   auto func_selection, auto func_crossover) {
             this->chromo_style = chromo_style;
             this->bounds = bounds;
             this->pop_size = pop_size;
@@ -92,12 +94,14 @@ namespace ga {
             }
         }
 
-        Population(int pop_size, chromo_config<t> chromo_style, auto func_fitness, auto func_roulette) {
+        Population(int pop_size, chromo_config<t> chromo_style, auto func_fitness, auto func_roulette,
+                   auto func_crossover) {
             this->chromo_style = chromo_style;
             this->bounds = {0,0};
             this->pop_size = pop_size;
             this->func_fitness = func_fitness;
             this->func_selection = func_roulette;
+            this->func_crossover = func_crossover;
             agent_buff = new Agent<t>[this->pop_size];
 
             //#pragma omp parallel for
@@ -117,7 +121,43 @@ namespace ga {
         void run_selection() {
             this->func_selection(*this);
         }
+
+        void run_crossover(int np, double percentual) {
+            this->func_crossover(*this, np, percentual);
+        }
     };
+
+    namespace crossover { 
+        namespace bin {
+            template<typename t>
+            void points(Population<t>& pop, int np, double percentual) {
+                int * points = new int[np];
+                cout << pop.agent_buff[0].fitness << endl;
+                int tam_chromo = pop.agent_buff[0].chromo_buff.size();
+                cout << tam_chromo << endl;
+                /*
+                bool * visitados = new bool[tam_chromo];
+                for(int i = 0; i < np; i++) {       
+                    int pos = rand::integer(0, tam_chromo);
+                    
+                    if(!visitados[pos]) {
+                        visitados[pos] = true;
+                        points[i] = pos;
+                    }
+
+                    cout << pos << endl;
+                }
+
+                /*
+                for(int i = 0; i < pop.pop_size; i++) {
+                    double chance = rand::real(0, 1);
+                    if(chance < percentual) {
+
+                    }
+                }*/
+            }
+        }
+    }
 
     namespace selection {
         template<typename t>
@@ -138,25 +178,27 @@ namespace ga {
                 roleta[i+1] = fit_rel_sum;
             }
 
-
             for(int i = 0; i < pop.pop_size + 1; i++) {
                 cout << roleta[i] << endl;
             }
 
             cout << endl;
             vector< Agent<t> > chosen_by_god;
-            while(chosen_by_god.size() < 10) {
-                double target = rand::real(0,1);
+            while(chosen_by_god.size() < pop.pop_size) {
+                double target = rand::real(0, 1);
                 for(int i = 0; i < pop.pop_size; i++) {
-                    if(roleta[i] <= target && roleta[i+1] > target) {
+                    if(roleta[i] <= target && roleta[i+1] > target && i != last) {
+                        last = i;
                         chosen_by_god.push_back(pop.agent_buff[i]);
                         cout << i << " " << pop.agent_buff[i].fitness << endl;
                         break;
                     }
                 }
             }
+
+            //pop.agent_buff = chosen_by_god.data();
         }
-    }
+    }   
 }
 
 #endif
