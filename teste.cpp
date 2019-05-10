@@ -1,11 +1,15 @@
-#include <bits/stdc++.h>
+#include <iostream>
 
 using namespace std;
 
 int main() {
-    #pragma omp parallel
-    {
-    // Code inside this region runs in parallel.
-    printf("Hello!\n");
-    }
+    int * vec = new int[10];
+    fill(vec, vec+10, -1);
+
+    int * ptr = &vec[5];
+    *ptr = 0;
+
+    for(int i = 0; i < 10; i++)
+        cout << vec[i] << endl;
+    return 0;
 }

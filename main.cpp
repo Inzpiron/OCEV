@@ -1,11 +1,12 @@
 #include <bits/stdc++.h>
-#include "source.hpp"
+#include "src/source.hpp"
+#include "src/selection/roulette.cpp"
+#include "src/crossover/int_perm.cpp"
 
 using namespace std;
 
 int main() {
     ga::rand::reset();
-
     auto fitness = [](ga::Agent<auto>& agent) {
         map<pair<int, int>, bool> mapa;
         int sum = 0;
@@ -19,11 +20,12 @@ int main() {
                 int _y = j;
                 int _x = agent.chromo_buff[j];
 
-                if(_y == y || x == _x || abs(x - _x) == abs(y - _y)){
+                if(_y == y || x == _x || abs(x - _x) == abs(y - _y)) {
                     sum++;
                 }
             }
         }
+
         return 1.0 - ((double)sum/(double)total);
     };
 
@@ -34,17 +36,17 @@ int main() {
         }
     );
 
-    ga::Population<int> pop1(            // Classe população
-        10,                              // Quantidade de individuos
-        chromo,                          // Estilo do cromossomo
-        fitness,                         // Função fitness associada
-        ga::selection::roulette<int>,    // Método de seleção
-        ga::crossover::bin::points<int>
+    ga::Population<int> pop1(              // Classe população
+        10,                                // Quantidade de individuos
+        chromo,                            // Estilo do cromossomo
+        fitness,                           // Função fitness associada
+        ga::selection::roulette<int>,      // Método de seleção
+        ga::crossover::int_perm::pmx<int>
     );
 
     pop1.run_fitness();
     pop1.run_selection();
-    pop1.run_crossover(10, 0.80);
+    pop1.run_crossover(0.80);
 
     return 0;
 }
