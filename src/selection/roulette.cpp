@@ -19,8 +19,7 @@ namespace ga {
                 fit_rel_sum += fit_rel[i];
                 roleta[i+1] = fit_rel_sum;
             }
-
-            cout << endl;
+            
             vector< Agent<t> > chosen_by_god;
             while(chosen_by_god.size() < pop.pop_size) {
                 double target = rand::real(0, 1);

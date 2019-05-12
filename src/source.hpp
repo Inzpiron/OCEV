@@ -70,25 +70,27 @@ namespace ga {
 
     template <typename t>
     class Population {
+        std::function<double(Agent<t>&)> func_fitness;
+        std::function<void(Population&)> func_selection;
+        std::function<void(Population&, double)> func_crossover;
+        std::function<void(Population&, double)> func_mutation;
+    
     public:
         int pop_size;
         pair<t, t> bounds;
         chromo_config<t> chromo_style;
         Agent<t> * agent_buff;
-
-        std::function<double(Agent<t>&)> func_fitness;
-        std::function<void(Population&)> func_selection;
-        std::function<void(Population&, double)> func_crossover;
         
         Population();
         Population(int pop_size, pair<t,t> bounds, chromo_config<t> chromo_style, auto func_fitness,
-                   auto func_selection, auto func_crossover) {
+                   auto func_selection, auto func_crossover, auto func_mutation) {
             this->chromo_style = chromo_style;
             this->bounds = bounds;
             this->pop_size = pop_size;
             this->func_fitness = func_fitness;
             this->func_selection = func_selection;
             this->func_crossover = func_crossover;
+            this->func_mutation  = func_mutation;
 
             agent_buff = new Agent<t>[this->pop_size];
             for(int i = 0; i < this->pop_size; i++) {
@@ -97,13 +99,14 @@ namespace ga {
         }
 
         Population(int pop_size, chromo_config<t> chromo_style, auto func_fitness, auto func_roulette,
-                   auto func_crossover) {
+                   auto func_crossover, auto func_mutation) {
             this->chromo_style = chromo_style;
             this->bounds = {0,0};
             this->pop_size = pop_size;
             this->func_fitness = func_fitness;
             this->func_selection = func_roulette;
             this->func_crossover = func_crossover;
+            this->func_mutation   = func_mutation;
 
             agent_buff = new Agent<t>[this->pop_size];
             for(int i = 0; i < this->pop_size; i++) {
@@ -128,6 +131,28 @@ namespace ga {
 
         void run_crossover(double percentual) {
             this->func_crossover(*this, percentual);
+        }
+
+        void run_mutation(double percentual) {
+            this->func_mutation(*this, percentual);
+        }
+
+        void start_worker(int n_gen) {
+            int total = n_gen;
+            do {
+                this->run_fitness();
+                //Relatório
+                cout << total - n_gen << endl;
+                for(int i = 0; i < this->pop_size; i++) {
+                    cout << this->agent_buff[i].id << " " << this->agent_buff[i].fitness << endl;
+                }
+                cout << endl;
+                
+                this->run_selection();
+                this->run_crossover(0.90);
+                this->run_mutation(0.0005);
+                //cin.get();
+            } while(n_gen--);
         }
     };
 }

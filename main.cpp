@@ -2,6 +2,7 @@
 #include "src/source.hpp"
 #include "src/selection/roulette.cpp"
 #include "src/crossover/int_perm.cpp"
+#include "src/mutation/int_perm.cpp"
 
 using namespace std;
 
@@ -32,7 +33,7 @@ int main() {
     ga::chromo_config<int> chromo(              // Estrutura que define o agente
         ga::INT_PERM,                           // Tipo de codificação: BIN, INT-PERM, REAL, INT
         []()->vector<int>{                      // Função para gerar os individuos iniciais
-            return ga::rand::vec_intperm(16);
+            return ga::rand::vec_intperm(16);   // Parametro = quantidade de genes
         }
     );
 
@@ -41,12 +42,11 @@ int main() {
         chromo,                            // Estilo do cromossomo
         fitness,                           // Função fitness associada
         ga::selection::roulette<int>,      // Método de seleção
-        ga::crossover::int_perm::pmx<int>
+        ga::crossover::int_perm::pmx<int>,
+        ga::mutation::int_perm::swap<int>
     );
 
-    pop1.run_fitness();
-    pop1.run_selection();
-    pop1.run_crossover(0.80);
+    pop1.start_worker(250000);
 
     return 0;
 }

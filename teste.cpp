@@ -1,15 +1,10 @@
 #include <iostream>
-
+#include <algorithm>
 using namespace std;
 
 int main() {
-    int * vec = new int[10];
-    fill(vec, vec+10, -1);
+    int t[] = {0, 1, 2, 3, 0};
 
-    int * ptr = &vec[5];
-    *ptr = 0;
-
-    for(int i = 0; i < 10; i++)
-        cout << vec[i] << endl;
+    cout << std::count(t, t+5, 1) << endl;
     return 0;
 }
