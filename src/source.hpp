@@ -80,6 +80,7 @@ namespace ga {
         pair<t, t> bounds;
         chromo_config<t> chromo_style;
         Agent<t> * agent_buff;
+        Agent<t> batman;
         
         Population();
         Population(int pop_size, pair<t,t> bounds, chromo_config<t> chromo_style, auto func_fitness,
@@ -91,6 +92,7 @@ namespace ga {
             this->func_selection = func_selection;
             this->func_crossover = func_crossover;
             this->func_mutation  = func_mutation;
+            this->batman = Agent<t>(chromo_style, -1);
 
             agent_buff = new Agent<t>[this->pop_size];
             for(int i = 0; i < this->pop_size; i++) {
@@ -107,7 +109,7 @@ namespace ga {
             this->func_selection = func_roulette;
             this->func_crossover = func_crossover;
             this->func_mutation   = func_mutation;
-
+            this->batman = Agent<t>(chromo_style, -1);
             agent_buff = new Agent<t>[this->pop_size];
             for(int i = 0; i < this->pop_size; i++) {
                 agent_buff[i] = Agent<t>(chromo_style, i);
@@ -123,6 +125,31 @@ namespace ga {
             for(int i = 0; i < pop_size; i++) {
                 agent_buff[i].fitness = func_fitness(agent_buff[i]);
             }
+
+            //ELETISMO
+            if(this->batman.id != -1){
+                double worst = 1.1;
+                int idx = -1;
+                for(int i = 0; i < pop_size; i++) {
+                    if(this->agent_buff[i].fitness < worst) { 
+                        worst = this->agent_buff[i].fitness;
+                        idx = i;
+                    }
+                }
+
+                this->agent_buff[idx] = batman;
+            }
+        
+            double best = -1;
+            int idx = -1;
+            for(int i = 0; i < pop_size; i++) {
+                if(this->agent_buff[i].fitness > best) { 
+                    best = this->agent_buff[i].fitness;
+                    idx = i;
+                }
+            }
+
+            batman = this->agent_buff[idx];
         }
 
         void run_selection() {
@@ -139,18 +166,27 @@ namespace ga {
 
         void start_worker(int n_gen) {
             int total = n_gen;
+            double best = 0;
             do {
                 this->run_fitness();
                 //Relatório
-                cout << total - n_gen << endl;
+                //cout << total - n_gen << endl;
+
+                int idx = -1;
                 for(int i = 0; i < this->pop_size; i++) {
-                    cout << this->agent_buff[i].id << " " << this->agent_buff[i].fitness << endl;
+                    //cout << this->agent_buff[i].id << " " << this->agent_buff[i].fitness << endl;
+                    if(best == 0 || this->agent_buff[i].fitness > best) {
+                        best = agent_buff[i].fitness;
+                        idx = i;
+                    }
                 }
-                cout << endl;
+                if(idx != -1)
+                    cout << total-n_gen << " " << agent_buff[idx].fitness << endl;
+                //cout << endl;
                 
                 this->run_selection();
                 this->run_crossover(0.90);
-                this->run_mutation(0.0005);
+                this->run_mutation(0.05);
                 //cin.get();
             } while(n_gen--);
         }
