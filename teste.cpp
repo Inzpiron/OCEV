@@ -1,10 +1,9 @@
 #include <iostream>
 #include <algorithm>
+#include <vector>
 using namespace std;
 
 int main() {
-    int t[] = {0, 1, 2, 3, 0};
-
-    cout << std::count(t, t+5, 1) << endl;
+    cout << numeric_limits<double>::max() << endl;
     return 0;
 }

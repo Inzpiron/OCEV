@@ -31,10 +31,12 @@ namespace ga {
     struct chromo_config {
         Cod cod_type;
         std::function<vector<t>()> chromo_gen;
+        std::pair<t, t> bounds;
 
         chromo_config(){}
-        chromo_config(Cod cod, auto func){
-            this->cod_type = cod;
+        chromo_config(Cod cod, std::pair<t,t> bounds, auto func){
+            this->cod_type   = cod;
+            this->bounds     = bounds;
             this->chromo_gen = func;
         }
     };
@@ -70,29 +72,30 @@ namespace ga {
 
     template <typename t>
     class Population {
-        std::function<double(Agent<t>&)> func_fitness;
+        std::function<double(Population<t>&, Agent<t>&)> func_fitness;
         std::function<void(Population&)> func_selection;
         std::function<void(Population&, double)> func_crossover;
         std::function<void(Population&, double)> func_mutation;
     
     public:
         int pop_size;
-        pair<t, t> bounds;
+        int gen;
         chromo_config<t> chromo_style;
         Agent<t> * agent_buff;
-        Agent<t> batman;
+        Agent<t> god_agent;
         
         Population();
-        Population(int pop_size, pair<t,t> bounds, chromo_config<t> chromo_style, auto func_fitness,
+        Population(int pop_size, chromo_config<t> chromo_style, auto func_fitness,
                    auto func_selection, auto func_crossover, auto func_mutation) {
-            this->chromo_style = chromo_style;
-            this->bounds = bounds;
             this->pop_size = pop_size;
+            this->gen = 0;
+            this->chromo_style = chromo_style;
             this->func_fitness = func_fitness;
             this->func_selection = func_selection;
             this->func_crossover = func_crossover;
             this->func_mutation  = func_mutation;
-            this->batman = Agent<t>(chromo_style, -1);
+            this->god_agent = Agent<t>(chromo_style, -1);
+            this->god_agent.fitness = numeric_limits<double>::min();
 
             agent_buff = new Agent<t>[this->pop_size];
             for(int i = 0; i < this->pop_size; i++) {
@@ -100,56 +103,30 @@ namespace ga {
             }
         }
 
-        Population(int pop_size, chromo_config<t> chromo_style, auto func_fitness, auto func_roulette,
-                   auto func_crossover, auto func_mutation) {
-            this->chromo_style = chromo_style;
-            this->bounds = {0,0};
-            this->pop_size = pop_size;
-            this->func_fitness = func_fitness;
-            this->func_selection = func_roulette;
-            this->func_crossover = func_crossover;
-            this->func_mutation   = func_mutation;
-            this->batman = Agent<t>(chromo_style, -1);
-            agent_buff = new Agent<t>[this->pop_size];
-            for(int i = 0; i < this->pop_size; i++) {
-                agent_buff[i] = Agent<t>(chromo_style, i);
-            }
-        }
-
-        Agent<t> agent() {
-            return agent_buff[0];
-        }
 
         void run_fitness() {
-            #pragma omp parallel for
+            Agent<t> ag_worst (this->chromo_style, -1);
+            ag_worst.fitness = numeric_limits<double>::max();
+#pragma omp parallel for 
             for(int i = 0; i < pop_size; i++) {
-                agent_buff[i].fitness = func_fitness(agent_buff[i]);
-            }
+                agent_buff[i].fitness = func_fitness(*this, agent_buff[i]);
+#pragma omp critical 
+                {
+                    if(agent_buff[i].fitness < ag_worst.fitness) {
+                        ag_worst = agent_buff[i];
+                        ag_worst.id = i;
+                    }
 
-            //ELETISMO
-            if(this->batman.id != -1){
-                double worst = 1.1;
-                int idx = -1;
-                for(int i = 0; i < pop_size; i++) {
-                    if(this->agent_buff[i].fitness < worst) { 
-                        worst = this->agent_buff[i].fitness;
-                        idx = i;
+                    if(agent_buff[i].fitness > this->god_agent.fitness) {
+                        this->god_agent = agent_buff[i];
                     }
                 }
-
-                this->agent_buff[idx] = batman;
-            }
-        
-            double best = -1;
-            int idx = -1;
-            for(int i = 0; i < pop_size; i++) {
-                if(this->agent_buff[i].fitness > best) { 
-                    best = this->agent_buff[i].fitness;
-                    idx = i;
-                }
             }
 
-            batman = this->agent_buff[idx];
+            //ELITISMO
+            if(this->god_agent.id != -1 && this->gen > 0){
+                this->agent_buff[ag_worst.id] = god_agent;
+            }
         }
 
         void run_selection() {
@@ -164,29 +141,24 @@ namespace ga {
             this->func_mutation(*this, percentual);
         }
 
-        void start_worker(int n_gen) {
+        void start_worker(int n_gen, double p_crossover, double p_mutation) {
             int total = n_gen;
-            double best = 0;
+            double god_agent = 0;
+            double ant = -1;
             do {
                 this->run_fitness();
-                //Relatório
-                //cout << total - n_gen << endl;
-
-                int idx = -1;
-                for(int i = 0; i < this->pop_size; i++) {
-                    //cout << this->agent_buff[i].id << " " << this->agent_buff[i].fitness << endl;
-                    if(best == 0 || this->agent_buff[i].fitness > best) {
-                        best = agent_buff[i].fitness;
-                        idx = i;
-                    }
-                }
-                if(idx != -1)
-                    cout << total-n_gen << " " << agent_buff[idx].fitness << endl;
-                //cout << endl;
-                
                 this->run_selection();
-                this->run_crossover(0.90);
-                this->run_mutation(0.05);
+
+                if(this->god_agent.fitness > ant) { 
+                    cout << this->gen << " " << this->god_agent.fitness << endl;
+                    ant = this->god_agent.fitness;
+
+                    if(ant >= 1) break;
+                }
+
+                this->run_crossover(p_crossover);
+                this->run_mutation(p_mutation);
+                ++this->gen;
                 //cin.get();
             } while(n_gen--);
         }

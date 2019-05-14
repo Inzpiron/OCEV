@@ -29,7 +29,13 @@ namespace ga {
 
                     if(chance < percentual) {
                         vector<int> * map = new vector<int>[tam_chromo];
-                        std::fill(map, map+tam_chromo, vector<int>());
+                        bool * visitado[2];
+                        visitado[0] = new bool[tam_chromo];
+                        visitado[1] = new bool[tam_chromo];
+
+                        std::fill(map, map + tam_chromo, vector<int>());
+                        std::fill(visitado[0], visitado[0] + tam_chromo, false);
+                        std::fill(visitado[1], visitado[1] + tam_chromo, false);
 
                         for(int ii = p1; ii <= p2; ii++) {
                             int * c1 = &(pop.agent_buff[i].chromo_buff[ii]);
@@ -39,24 +45,31 @@ namespace ga {
                             map[*c1].push_back(*c2);
                             int aux = *c1; // Swaping ...
                             *c1 = *c2;
-                            *c2 = aux;  
+                            *c2 = aux; 
+                            visitado[0][*c1] = true;
+                            visitado[1][*c2] = true; 
                         }
                         
                         auto func_map = [&](int idx) {
                             for(int l = 0; l < 2; l++) {
                                 int * c = &(pop.agent_buff[i+l].chromo_buff[idx]);
-                                bool * visitado = new bool[tam_chromo];
-                                std::fill(visitado, visitado+tam_chromo, false);
-                                visitado[*c] = true;
-                                do {
+                                
+                                bool * v_aux = new bool[tam_chromo];
+                                std::fill(v_aux, v_aux + tam_chromo, false);
+                                v_aux[*c] = true;
+                                
+                                while(visitado[l][*c]) { 
                                     for(auto x : map[*c]) {
-                                        if(!visitado[x]) {
+                                        if(!v_aux[x]) {
                                             *c = x;
-                                            visitado[*c] = true;
+                                            v_aux[*c] = true;
+                                            break;
                                         }
                                     }
-                                } while(std::count(pop.agent_buff[i+l].chromo_buff.begin(), 
-                                        pop.agent_buff[i+l].chromo_buff.end(), *c) > 1);
+                                }
+
+                                delete[] v_aux;
+                                visitado[l][*c] = true;
                             }
                         };
                         
@@ -64,6 +77,9 @@ namespace ga {
                             if(ii < p1 || ii > p2)
                                 func_map(ii);
 
+                        delete[] map;
+                        delete[] visitado[0];
+                        delete[] visitado[1];
                         //cout << "AG1: "; pop.agent_buff[i].print(); cout << endl;
                         //cout << "AG2: "; pop.agent_buff[i+1].print(); cout << endl;
                     }
